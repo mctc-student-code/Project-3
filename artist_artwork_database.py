@@ -53,10 +53,10 @@ class ArtworkArtistDB:
     def __init__(self):
         with sqlite3.connect(db) as conn:
             conn.execute('CREATE TABLE IF NOT EXISTS Artist(ArtistName TEXT UNIQUE, Email TEXT)')
-        with sqlite3.connect(db) as conn:
             conn.execute('CREATE TABLE IF NOT EXISTS Artwork(ArtistName TEXT UNIQUE, ArtworkName TEXT UNIQUE, Price REAL, Available TEXT)')
-            conn.commit()
-            conn.close()
+            # conn.commit()  # not needed. Using the with structure will commit changes 
+        
+        conn.close()
 
             
 
@@ -76,21 +76,24 @@ class ArtworkArtistDB:
             raise ArtistError(f'Error adding {artist.name}') from e
         finally:
         
-            conn.commit()
+            conn.close()
 
 
     def add_artwork(self, artworks):
         #insert_sql =  'INSERT INTO Artwork'
 
-        insert_sql = 'INSERT INTO Artwork(ArtistName, ArtworkName, Price, Availability) VALUES (?,?,?,?)'
+        # also make sure column names are correct
+        insert_sql = 'INSERT INTO Artwork(ArtistName, ArtworkName, Price, Available) VALUES (?,?,?,?)'
         
 
         try:
             with sqlite3.connect(db) as conn:
-                rows_modified = conn.execute(insert_sql, (artworks.name, artworks.artname, artworks.price, artworks.availability))
-                conn.close()
+                # be careful with attributes 
+                rows_modified = conn.execute(insert_sql, (artworks.artistname, artworks.artname, artworks.price, artworks.availability))
             return rows_modified
         except sqlite3.IntegrityError as e:
+            print(e)
+            # this is not the only reason you can get an intergiry error. 
             raise ArtworkError(f'Error - this artwork is already in the database. {artworks.name}') from e
         finally:
             
